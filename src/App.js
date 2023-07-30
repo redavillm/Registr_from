@@ -1,6 +1,11 @@
-// import * as yup from "yup";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import "./App.css";
+import {
+  emailChangeScheme,
+  passwordChangeScheme,
+  passwordBlureScheme,
+  validateAndGetErrorMessage,
+} from "./schemes";
 
 const sendData = (data) => {
   console.log(data);
@@ -8,42 +13,51 @@ const sendData = (data) => {
 
 const App = () => {
   const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState(null);
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState(null);
   const [secondPass, setSecondPass] = useState("");
+
+  const submitButtonRef = useRef(null);
 
   const onSubmit = (event) => {
     event.preventDefault();
     sendData({ email, password });
   };
 
-  const onPasswordChang = ({ target }) => {
-    setPassword(target.value);
+  const onEmailChange = ({ target }) => {
+    setEmail(target.value);
+
+    const error = validateAndGetErrorMessage(emailChangeScheme, target.value);
+
+    setEmailError(error);
   };
 
-  const onPasswordBlure = ({ target }) => {
-    let error = null;
-    if (password.length < 4) {
-      error = "Пароль должне быть от четырех символов.";
-    }
-    if (!/\d/.test(target.value)) {
-      error = "Пароль должен содержать хотя бы одну цифру.";
-    }
-    if (!/[a-z]/.test(target.value)) {
-      error = "Пароль должен содержать хотя бы одну строчную букву.";
-    }
-    if (!/[A-Z]/.test(target.value)) {
-      error = "Пароль должен содержать хотя бы одну заглавную букву.";
-    }
+  const onPasswordChange = ({ target }) => {
+    setPassword(target.value);
+
+    const error = validateAndGetErrorMessage(
+      passwordChangeScheme,
+      target.value
+    );
 
     setPasswordError(error);
   };
 
-  const onSecondPasswordChang = ({ target }) => {
-    setSecondPass(target.value);
+  const onPasswordBlure = () => {
+    const error = validateAndGetErrorMessage(passwordBlureScheme, password);
+
+    setPasswordError(error);
   };
 
-  const onSecondPasswordBlure = ({ target }) => {
+  const onSecondPasswordChange = ({ target }) => {
+    setSecondPass(target.value);
+    if (password === secondPass) {
+      submitButtonRef.current.focus();
+    }
+  };
+
+  const onSecondPasswordBlure = () => {
     let error = null;
 
     if (password !== secondPass) {
@@ -55,52 +69,52 @@ const App = () => {
 
   return (
     <div className="App">
-      {/* {error && <div className="error_message">{error}</div>} */}
       <div className="wrapper">
         <h3>Registration form</h3>
-
         <form onSubmit={onSubmit}>
           <div className="label">Email: </div>
-
           <input
             type="email"
             name="email"
             value={email}
-            onChange={({ target }) => setEmail(target.value)}
-          ></input>
-
+            onChange={onEmailChange}
+          />
           <br></br>
-
           <div className="label">Password: </div>
           <input
             type="password"
             name="password"
             value={password}
             onBlur={onPasswordBlure}
-            onChange={onPasswordChang}
-          ></input>
-
+            onChange={onPasswordChange}
+          />
           <br></br>
-
           <div className="label">Repeat password: </div>
           <input
             type="password"
             value={secondPass}
             onBlur={onSecondPasswordBlure}
-            onChange={onSecondPasswordChang}
-          ></input>
-
+            onChange={onSecondPasswordChange}
+          />
           <br></br>
-
           <button
+            ref={submitButtonRef}
             className="button"
             type="submit"
-            disabled={passwordError !== null}
+            disabled={
+              password === "" ||
+              email === "" ||
+              secondPass === "" ||
+              passwordError !== null ||
+              emailError !== null
+            }
           >
             Registrations
           </button>
         </form>
-
+        {emailError && (
+          <div className="error_password_message">{emailError}</div>
+        )}
         {passwordError && (
           <div className="error_password_message">{passwordError}</div>
         )}
